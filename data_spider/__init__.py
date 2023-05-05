@@ -1,7 +1,7 @@
 import sys
 
-from .fetcher import Fetcher, Rule
-from .processor import Processor
+from .fetcher import Fetcher
+from .processor import Processor, Rule
 from .scheduler import Scheduler, Task
 from .storage import Storage, StorageType
 from .exceptions import FetchError, ProcessError, StorageError, TaskError
@@ -10,7 +10,7 @@ from .exceptions import FetchError, ProcessError, StorageError, TaskError
 class Spider:
     def __init__(self):
         self.start_urls = []
-        self.parse_func = None
+        self.rule = None
         self.storage_func = None
         self.thread_num = 1
         self.scheduler = None
@@ -18,9 +18,9 @@ class Spider:
         self.processor = None
         self.storage = None
 
-    def set_params(self, start_urls, parse_func, storage_func, thread_num=1):
+    def set_params(self, start_urls, rule, storage_func, thread_num=1):
         self.start_urls = start_urls
-        self.parse_func = parse_func
+        self.rule = rule
         self.storage_func = storage_func
         self.thread_num = thread_num
         self.scheduler = Scheduler()
@@ -44,8 +44,7 @@ class Spider:
                 break
             try:
                 response = self.fetcher.fetch(task.url)
-                data = self.parse_func(response)
-                processed_data = self.processor.process(data)
+                processed_data = self.processor.process(response, self.rule)
                 self.storage.store(processed_data)
                 self.scheduler.finish_task(task)
             except FetchError as e:

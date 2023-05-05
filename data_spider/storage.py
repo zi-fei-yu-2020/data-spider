@@ -28,19 +28,21 @@ class Storage:
             f.write("\n")
 
     def store_as_csv(self, data):
-        with open(self.file_path, "a", newline='') as f:
+        if isinstance(data, dict):
+            data = [data]
+        if not data:
+            return
+
+        column_names = set()
+        for d in data:
+            column_names.update(d.keys())
+
+        with open(self.file_path, "a", newline='', encoding="utf-8") as f:
             writer = csv.writer(f)
-            if isinstance(data, dict):
-                for key, value in data.items():
-                    if isinstance(value, list):
-                        row = [key] + value if key != "null" else value
-                        writer.writerow(row)
-                    elif isinstance(value, str):
-                        row = [key, value]
-                        writer.writerow(row)
-                    else:
-                        raise ValueError("Unsupported value type for storing as CSV")
-            elif isinstance(data, list):
-                for item in data:
-                    writer.writerow([item])
+            writer.writerow(column_names)
+
+        with open(self.file_path, "a", newline='', encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=column_names)
+            for d in data:
+                writer.writerow(d)
 
