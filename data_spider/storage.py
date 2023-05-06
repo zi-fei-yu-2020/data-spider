@@ -36,6 +36,7 @@ class Storage:
         column_names = set()
         for d in data:
             column_names.update(d.keys())
+        column_names = sorted(column_names)
 
         with open(self.file_path, "a", newline='', encoding="utf-8") as f:
             writer = csv.writer(f)
