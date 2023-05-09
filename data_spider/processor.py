@@ -1,10 +1,11 @@
 from bs4 import BeautifulSoup
 from .utils import DataProcess
+from .exceptions import RuleError
 
 
 class Rule:
     def __init__(self, name: str, tag: str = None, attrs: dict = None, display=None, children: list = None,
-                 show: bool = False, sep: str = None, exclude_method=None, process_method=None):
+                 show: bool = False, offset: int = 0, sep: str = None, exclude_method=None, process_method=None):
         self.name = name
         self.tag = tag
         self.attrs = attrs
@@ -15,6 +16,7 @@ class Rule:
         self.exclude_method = exclude_method
         self.process_method = process_method
         self.rule_dict = None
+        self.offset = offset
 
     def add_children(self, child_rules):
         for child_rule in child_rules:
@@ -54,6 +56,7 @@ class Processor:
                 data[rule.name] = item.string
             else:
                 data[rule.name] = item.get(k)
+            data[rule.name] = str(item.parent.contents[item.parent.index(item) + rule.offset])
             data[rule.name] = DataProcess.default_process(data.get(rule.name, None), rule.process_method)
             if not rule.show:
                 data.pop(rule.name, None)
@@ -86,7 +89,9 @@ class Processor:
                 data.pop(rule.name, None)
                 continue
             for child_rule in rule.children:
+                # print(item)
                 child_data = self.__get_child_data(item, child_rule)
+                # print(child_data)
                 if child_data:
                     data.update(child_data)
             result.append(data)

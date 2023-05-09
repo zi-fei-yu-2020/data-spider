@@ -1,15 +1,18 @@
 import requests
 import urllib3
 import brotli
+
+from requests_html import HTMLSession
 from .exceptions import FetchError
 from .utils import UserAgentPool
-
 
 urllib3.disable_warnings()
 
 
 class Fetcher:
-    def __init__(self):
+    def __init__(self, use_dynamic: bool):
+        self.__use_dynamic = use_dynamic
+        self.__session = HTMLSession()
         self.ua_tool = UserAgentPool()
         self.__headers = {
             'User-Agent': self.ua_tool.get_random_user_agent("pc", "chrome"),
@@ -44,13 +47,13 @@ class Fetcher:
 
     def fetch(self, url: str):
         try:
-            response = requests.get(url, headers=self.__headers, verify=False)
+            response = self.__session.get(url, headers=self.__headers, verify=False) \
+                if self.__use_dynamic else requests.get(url, headers=self.__headers, verify=False)
             if response.headers.get('Content-Encoding') == 'br':
                 response = brotli.decompress(response.content).decode('utf-8')
             else:
                 response = response.text
-            # response.raise_for_status()
-            # response.encoding = response.apparent_encoding
+            # print(response)
             return response
         except Exception as e:
             raise FetchError(f"Failed to fetch {url}: {e}")

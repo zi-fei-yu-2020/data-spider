@@ -95,27 +95,44 @@ if __name__ == '__main__':
     #     thread_num=4
     # )
 
+    # parser = Rule(
+    #     "电影信息数据集",
+    #     tag="div",
+    #     attrs={
+    #         "class": "el-card__body"
+    #     },
+    #     children=[
+    #         Rule("电影名", tag="h2", attrs={"class": "m-b-sm"}, display={"text": False}, show=True),
+    #         Rule("电影类型", tag="div", attrs={"class": "categories"}, display={"text": False}, show=True),
+    #         Rule("电影封面", tag="img", attrs={"class": "cover"}, display={"src": True}, show=True)
+    #     ]
+    # )
+    # spider.set_params(
+    #     start_urls=["https://ssr1.scrape.center/"],
+    #     rule=parser,
+    #     thread_num=4
+    # )
+
     parser = Rule(
-        "电影信息数据集",
-        tag="div",
+        "知乎文章目录",
+        tag="blockquote",
         attrs={
-            "class": "el-card__body"
+            "data-pid": "_WA9m1oo"
         },
         children=[
-            Rule("电影名", tag="h2", attrs={"class": "m-b-sm"}, display={"text": False}, show=True),
-            Rule("电影类型", tag="div", attrs={"class": "categories"}, display={"text": False}, show=True),
-            Rule("电影封面", tag="img", attrs={"class": "cover"}, display={"src": True}, show=True)
-        ]
+            Rule("目录", tag="br", display={"string": False}, show=True, offset=1),
+        ],
+        show=False
     )
     spider.set_params(
-        start_urls=["https://ssr1.scrape.center/"],
+        start_urls=["https://zhuanlan.zhihu.com/p/109342493"],
         rule=parser,
-        thread_num=4
+        thread_num=1
     )
     spider.start()
-    # print(spider.get())
+    print(spider.get())
     # data = [[{'标题': '2048游戏项目计', '二级标题': '介绍|项目结构|技术栈|实现细节', '三级标题': 'Model类|GameView类|MessageBox类|Block类'}]]
     # print(spider.get(0,0,"以及标题", data=data, fuzzy=False))
     # spider.download_all("./test_img")
     # spider.download_single("https://www.russfuss.com/site/assets/files/1/widethumb-1.300x111.webp", "./nice.webp")
-    spider.download_csv("./default.csv", "./test_csv", 2, 1)
+    # spider.download_csv("./default.csv", "./test_csv", 2, 1)

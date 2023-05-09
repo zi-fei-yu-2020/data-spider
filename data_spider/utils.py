@@ -98,10 +98,13 @@ class UserAgentPool:
 class DataProcess:
     @staticmethod
     def default_process(data: str, func=None):
-        if func:
-            return func(data)
-        data = data.replace(" ", "").replace("\n", "").replace(" ", "").replace("\\n", "")
-        return data
+        if data:
+            if func:
+                return func(data)
+            data = data.replace(" ", "").replace("\n", "").replace(" ", "").replace("\\n", "")
+            return data
+        else:
+            return None
 
     @staticmethod
     def default_exclude(data: str | dict, func=None):
