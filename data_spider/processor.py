@@ -3,20 +3,17 @@ from .utils import DataProcess
 
 
 class Rule:
-    def __init__(self, column_name: str, tag: str = None, attrs: dict = None, display=None, children: list = None,
-                 show: bool = False, sep: str = None, exclude_method=DataProcess.del_null,
-                 process_method=DataProcess.sub):
-        self.column_name = column_name
-        if display is None:
-            display = {"text": False}
+    def __init__(self, name: str, tag: str = None, attrs: dict = None, display=None, children: list = None,
+                 show: bool = False, sep: str = None, exclude_method=None, process_method=None):
+        self.name = name
         self.tag = tag
         self.attrs = attrs
-        self.display = display
+        self.display = display or {"text": False}
         self.children = children or []
         self.show = show
         self.sep = sep
         self.exclude_method = exclude_method
-        self.extend_method = process_method
+        self.process_method = process_method
         self.rule_dict = None
 
     def add_children(self, child_rules):
@@ -45,48 +42,37 @@ class Rule:
 
 
 class Processor:
-    def __init__(self):
-        pass
+    def __init__(self, special_tags=None):
+        self.special_tags = special_tags or []  # 暂时不做操作
 
     def __get_data(self, item, rule):
         data = {}
         for k, v in rule.display.items():
             if k == "text":
-                data[rule.column_name] = item.text
+                data[rule.name] = item.text
             elif k == "string":
-                data[rule.column_name] = item.string
+                data[rule.name] = item.string
             else:
-                data[rule.column_name] = item.get(k)
-            if rule.extend_method:
-                data[rule.column_name] = rule.extend_method(data[rule.column_name])
+                data[rule.name] = item.get(k)
+            data[rule.name] = DataProcess.default_process(data.get(rule.name, None), rule.process_method)
             if not rule.show:
-                del data[rule.column_name]
+                data.pop(rule.name, None)
                 break
-            if rule.exclude_method:
-                if rule.exclude_method(data[rule.column_name]):
-                    del data[rule.column_name]
-                    continue
+            if DataProcess.default_exclude(data[rule.name], rule.exclude_method):
+                data.pop(rule.name, None)
         return data
 
     def __get_child_data(self, item, child_rule):
-        column_name = child_rule.column_name
+        name = child_rule.name
         tag = child_rule.tag
         attrs = child_rule.attrs or {}
         display = child_rule.display
         children = child_rule.children or []
         elements = item.find_all(tag, attrs=attrs, **display)
-        print(elements)
-        child_data = []
-        if elements:
-            for element in elements:
-                try:
-                    if children:
-                        child_data.append(self.process(str(element), child_rule))
-                    else:
-                        child_data.append(self.__get_data(element, child_rule)[column_name])
-                except Exception as e:
-                    print(f"Error occurred while parsing tag {tag}: {e}")
-            return {column_name: child_rule.sep.join(child_data) if child_rule.sep else child_data}
+        child_data = [self.process(str(element), child_rule) if children else
+                      self.__get_data(element, child_rule).get(name, None) for element in elements]
+        if child_data:
+            return {name: child_rule.sep.join(child_data) if child_rule.sep else child_data}
         return None
 
     def process(self, html, rule: Rule):
@@ -96,6 +82,9 @@ class Processor:
         result = []
         for item in items:
             data = self.__get_data(item, rule)
+            if rule.show and DataProcess.default_exclude(data[rule.name], rule.exclude_method):
+                data.pop(rule.name, None)
+                continue
             for child_rule in rule.children:
                 child_data = self.__get_child_data(item, child_rule)
                 if child_data:

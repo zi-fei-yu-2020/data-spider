@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import csv
 import random
 
 
@@ -94,13 +97,39 @@ class UserAgentPool:
 
 class DataProcess:
     @staticmethod
-    def sub(data: str):
-        data = data.replace(" ", "").replace("\n", "").replace(" ", "")
+    def default_process(data: str, func=None):
+        if func:
+            return func(data)
+        data = data.replace(" ", "").replace("\n", "").replace(" ", "").replace("\\n", "")
         return data
 
     @staticmethod
-    def del_null(data: str):
+    def default_exclude(data: str | dict, func=None):
+        if func:
+            return func(data)
         if not data or data == '':
             return True
         return False
 
+    @staticmethod
+    def get_url_file(url: str):
+        download_name = url.split("/")[-1]
+        if "." in download_name:
+            return download_name
+        return None
+
+    @staticmethod
+    def get_url_type(url: str):
+        url_file = DataProcess.get_url_file(url)
+        if url_file:
+            return url_file.split(".")[-1]
+        return "txt"
+
+    @staticmethod
+    def read_csv(csv_file):
+        data = []
+        with open(csv_file, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                data.append(row)
+        return data
