@@ -4,21 +4,21 @@
 
 ## 复制
 
-由于暂时未写setup.py，所以最简单的使用方式就是将data_spider包以及requirements.txt复制到项目的根目录下，在根目录下打开终端，运行以下pip命令：
+由于暂时未写setup.py，所以最简单的使用方式就是将`data_spider包`以及`requirements.txt`复制到项目的根目录下，在根目录下打开终端，运行以下pip命令：
 
 ```bash
 pip install -r requirements.txt -i [推荐使用国内镜像源]
 ```
 
-最后删除requirements.txt文件。
+最后删除`requirements.txt`文件，让你的项目看起来干净一点。
 
-## 导入
+## 导入包中模块
 
 ```python
 from data_spider import *
 ```
 
-## 初始化
+## 初始化Spider类
 
 创建`Spider`类的实例对象时需要传入一个名字（该名字用于监控日志导入的标识）的参数。
 
