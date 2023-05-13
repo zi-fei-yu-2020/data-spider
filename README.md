@@ -6,7 +6,7 @@ DataSpider是一个供第三方开发者使用的万能爬虫框架。第三方�
 
 ## 1. 复制
 
-由于暂时未写setup.py，所以最简单的使用方式就是将`data_spider包`以及`requirements.txt`复制到项目的根目录下，在根目录下打开终端，运行以下pip命令：
+最简单的使用方式就是将`data_spider包`以及`requirements.txt`复制到项目的根目录下，在根目录下打开终端，运行以下pip命令：
 
 ```bash
 pip install -r requirements.txt -i [推荐使用国内镜像源]
