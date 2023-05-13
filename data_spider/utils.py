@@ -2,6 +2,45 @@ from __future__ import annotations
 
 import csv
 import random
+import datetime
+
+from enum import Enum
+
+
+class Logs(Enum):
+    WORK_QUEUE = "work_queue"
+    UA = "ua"
+    ALL_UA = "all_ua"
+    RULE = "rule"
+    THREAD_NUM = "thread_num"
+    LOAD_TYPE = "load_type"
+    SOURCE_RESPONSE = "source_response"
+    HEADERS = "headers"
+    ELEMENT = "element"
+    ITEM = "item"
+    CHILD_DATA = "child_data"
+
+
+class Log:
+    def __init__(self):
+        self.__logs = {}
+
+    def set(self, tag, value):
+        if tag not in self.__logs:
+            self.__logs[tag] = []
+        self.__logs[tag].append(f"{datetime.datetime.now()}     {tag.value}    {type(value)}   {str(value)}")
+
+    def show(self, tag=None):
+        if not tag:
+            for v in self.__logs.values():
+                print(v)
+            return self.__logs
+        while True:
+            if self.__logs.get(tag, None):
+                break
+        for item in self.__logs.get(tag, None):
+            print(item)
+        return self.__logs.get(tag, None)
 
 
 class UserAgentPool:

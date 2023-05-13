@@ -1,11 +1,12 @@
 from bs4 import BeautifulSoup
-from .utils import DataProcess
-from .exceptions import RuleError
+from .utils import DataProcess, Logs, Log
+from lxml import etree
 
 
 class Rule:
     def __init__(self, name: str, tag: str = None, attrs: dict = None, display=None, children: list = None,
-                 show: bool = False, offset: int = 0, sep: str = None, exclude_method=None, process_method=None):
+                 show: bool = False, offset: int = 0, is_offset: bool = False, sep: str = None, xpath: str = None,
+                 exclude_method=None, process_method=None):
         self.name = name
         self.tag = tag
         self.attrs = attrs
@@ -17,6 +18,8 @@ class Rule:
         self.process_method = process_method
         self.rule_dict = None
         self.offset = offset
+        self.is_offset = is_offset
+        self.xpath = xpath
 
     def add_children(self, child_rules):
         for child_rule in child_rules:
@@ -44,25 +47,33 @@ class Rule:
 
 
 class Processor:
-    def __init__(self, special_tags=None):
+    def __init__(self, parser: str, special_tags=None, log: Log = Log()):
+        self.__parser = parser
         self.special_tags = special_tags or []  # 暂时不做操作
+        self.log = log
 
     def __get_data(self, item, rule):
         data = {}
-        for k, v in rule.display.items():
-            if k == "text":
-                data[rule.name] = item.text
-            elif k == "string":
-                data[rule.name] = item.string
-            else:
-                data[rule.name] = item.get(k)
-            data[rule.name] = str(item.parent.contents[item.parent.index(item) + rule.offset])
-            data[rule.name] = DataProcess.default_process(data.get(rule.name, None), rule.process_method)
-            if not rule.show:
-                data.pop(rule.name, None)
-                break
-            if DataProcess.default_exclude(data[rule.name], rule.exclude_method):
-                data.pop(rule.name, None)
+        if rule.xpath:
+            item = etree.fromstring(item.prettify())
+            data[rule.name] = item.xpath(rule.xpath)
+        else:
+            for k, v in rule.display.items():
+                if k == "text":
+                    data[rule.name] = item.text
+                elif k == "string":
+                    data[rule.name] = item.string
+                else:
+                    data[rule.name] = item.get(k)
+                if rule.is_offset:
+                    data[rule.name] = str(item.parent.contents[item.parent.index(item) + rule.offset])
+                data[rule.name] = DataProcess.default_process(data.get(rule.name, None), rule.process_method)
+                if not rule.show:
+                    data.pop(rule.name, None)
+                    break
+                if DataProcess.default_exclude(data[rule.name], rule.exclude_method):
+                    data.pop(rule.name, None)
+        self.log.set(Logs.ELEMENT, data)
         return data
 
     def __get_child_data(self, item, child_rule):
@@ -80,18 +91,19 @@ class Processor:
 
     def process(self, html, rule: Rule):
         rule.establish()
-        soup = BeautifulSoup(html, 'lxml')
+        self.log.set(Logs.RULE, rule)
+        soup = BeautifulSoup(html, self.__parser)
         items = soup.find_all(rule.tag, attrs=rule.attrs, **rule.display)
         result = []
         for item in items:
+            self.log.set(Logs.ITEM, item)
             data = self.__get_data(item, rule)
             if rule.show and DataProcess.default_exclude(data[rule.name], rule.exclude_method):
                 data.pop(rule.name, None)
                 continue
             for child_rule in rule.children:
-                # print(item)
                 child_data = self.__get_child_data(item, child_rule)
-                # print(child_data)
+                self.log.set(Logs.CHILD_DATA, child_data)
                 if child_data:
                     data.update(child_data)
             result.append(data)

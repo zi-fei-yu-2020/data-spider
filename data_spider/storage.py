@@ -150,6 +150,7 @@ class Storage:
     def __init__(self, file_path, storage_type: StorageType):
         self.file_path = file_path if f".{storage_type.value}" in file_path else f"{file_path}.{storage_type.value}"
         self.storage_type = storage_type
+        self.have_column_names = False
 
     def store(self, data):
         if self.storage_type == StorageType.JSON:
@@ -175,9 +176,11 @@ class Storage:
             column_names.update(d.keys())
         column_names = sorted(column_names)
 
-        with open(self.file_path, "a", newline='', encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerow(column_names)
+        if not self.have_column_names:
+            self.have_column_names = True
+            with open(self.file_path, "a", newline='', encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(column_names)
 
         with open(self.file_path, "a", newline='', encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=column_names)

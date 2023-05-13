@@ -4,13 +4,13 @@ import brotli
 
 from requests_html import HTMLSession
 from .exceptions import FetchError
-from .utils import UserAgentPool
+from .utils import UserAgentPool, Logs, Log
 
 urllib3.disable_warnings()
 
 
 class Fetcher:
-    def __init__(self, use_dynamic: bool):
+    def __init__(self, use_dynamic: bool, log: Log = Log()):
         self.__use_dynamic = use_dynamic
         self.__session = HTMLSession()
         self.ua_tool = UserAgentPool()
@@ -24,6 +24,12 @@ class Fetcher:
             'Referer': "",
             'Upgrade-Insecure-Requests': '1',
         }
+        self.log = log
+        self.log.set(Logs.HEADERS, f"The current Headers information is as follows: {self.__headers}")
+        self.log.set(Logs.UA, f"The UA currently in use is: {self.__headers.get('User-Agent', None)}")
+
+    def get_header(self, key):
+        return self.__headers.get(key, None)
 
     def update_refer(self, url: str):
         self.__headers.update({"Referer": url})
@@ -53,7 +59,7 @@ class Fetcher:
                 response = brotli.decompress(response.content).decode('utf-8')
             else:
                 response = response.text
-            # print(response)
+            self.log.set(Logs.SOURCE_RESPONSE, response)
             return response
         except Exception as e:
             raise FetchError(f"Failed to fetch {url}: {e}")

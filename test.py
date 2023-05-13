@@ -1,4 +1,4 @@
-from data_spider import Spider, StorageType, Storage, Rule
+from data_spider import *
 
 
 def yield_urls(url: str, pages: int):
@@ -28,7 +28,7 @@ def single_to_list(data: str):
 
 
 if __name__ == '__main__':
-    spider = Spider()
+    spider = Spider("测试爬虫3号")
     # parser = Rule(
     #     "电影信息数据集",
     #     tag="div",
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     #     ]
     # )
     # spider.set_params(
-    #     start_urls=yield_urls("https://ssr1.scrape.center/page", 2),
+    #     start_urls=yield_urls("https://ssr1.scrape.center/page", 5),
     #     rule=parser,
     #     storage_func=Storage("./test.csv", StorageType.CSV),
     #     thread_num=1
@@ -120,7 +120,7 @@ if __name__ == '__main__':
             "data-pid": "_WA9m1oo"
         },
         children=[
-            Rule("目录", tag="br", display={"string": False}, show=True, offset=1),
+            Rule("目录", tag="br", display={"string": False}, show=True, offset=1, is_offset=True),
         ],
         show=False
     )
@@ -129,8 +129,19 @@ if __name__ == '__main__':
         rule=parser,
         thread_num=1
     )
-    spider.start()
-    print(spider.get())
+    spider.scrap()
+    # spider.open_monitor()
+
+    # task = TimerTask()
+    # timer = Timer(5, False)
+    # timer.add_function(spider.scrap)
+    # timer.add_function(spider.open_monitor)
+    # task.add_timer(timer)
+    # task.start()
+    # print(spider.get())
+    # spider.show_log()
+    # spider.show_log(Logs.ELEMENT)
+    # spider.show_log(Logs.CHILD_DATA)
     # data = [[{'标题': '2048游戏项目计', '二级标题': '介绍|项目结构|技术栈|实现细节', '三级标题': 'Model类|GameView类|MessageBox类|Block类'}]]
     # print(spider.get(0,0,"以及标题", data=data, fuzzy=False))
     # spider.download_all("./test_img")
