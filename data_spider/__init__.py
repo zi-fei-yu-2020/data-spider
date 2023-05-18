@@ -87,17 +87,16 @@ class Spider:
             self.__monitor.set("scarp_status", f"Something went wrong: {e}")
 
     def __start_thread(self):
-        processed_data = None
         while True:
             task = self.__scheduler.get_task()
             if task is None:
-                self.__data.append(processed_data)
                 break
             try:
                 response = self.fetcher.fetch(task.url)
                 processed_data = self.__processor.process(response, self.rule)
                 if self.storage_func:
                     self.storage.store(processed_data)
+                self.__data.append(processed_data)
                 self.__scheduler.finish_task()
             except FetchError as e:
                 print(e)
